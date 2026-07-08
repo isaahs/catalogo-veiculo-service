@@ -34,3 +34,7 @@ resilience4j:
       sincronizarVeiculo:
         maxAttempts: 3
         waitDuration: 2s # Tempo de espera fixo de 2s entre retentativas
+
+logging:
+  level:
+    liquibase: DEBUG
