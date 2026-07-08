@@ -40,3 +40,8 @@ build/
 *.tfvars.json
 .terraform.lock.hcl
 
+### Environment & Executables ###
+.env
+*.jar
+
+
