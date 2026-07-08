@@ -77,12 +77,6 @@ O projeto inclui arquivos de infraestrutura como código (IaC) e manifestos Kube
     *   [secret.yaml](file:///home/isadmot/Github/CatalogoService/k8s/secret.yaml): Declara o recurso de `Secret` do Kubernetes contendo as credenciais codificadas em Base64 (`SPRING_DATASOURCE_PASSWORD` e `JWT_SECRET`).
     *   [deployment.yaml](file:///home/isadmot/Github/CatalogoService/k8s/deployment.yaml): Declara o deploy do microsserviço de catálogo, referenciando as variáveis sensíveis do `secret.yaml` usando `secretKeyRef` para evitar exposição de credenciais em texto puro.
     *   [service.yaml](file:///home/isadmot/Github/CatalogoService/k8s/service.yaml): Declara o serviço correspondente para expor o microsserviço de catálogo.
-
-> [!IMPORTANT]
-> **Segurança em Produção**:
-> * **Kubernetes**: Embora tenhamos migrado as credenciais do manifest de Deployment para o recurso de `Secret` (`secret.yaml`), os valores sensíveis continuam versionados no repositório por questões de portabilidade e facilidade de avaliação do desafio. Em cenários reais de produção, o arquivo `secret.yaml` **nunca** deve ser versionado no Git. Em vez disso, essas credenciais devem ser injetadas dinamicamente durante a implantação via pipeline de CI/CD (ex: GitHub Secrets) ou gerenciadas e injetadas por soluções de cofres de credenciais (Vaults), como AWS Secrets Manager, HashiCorp Vault ou Kubernetes External Secrets.
-> * **Terraform**: A senha da base de dados RDS PostgreSQL foi refatorada para uma variável sensitiva (`db_password`). Em produção, o valor desta variável deve ser injetado externamente, por exemplo, definindo a variável de ambiente `TF_VAR_db_password` no ambiente de CI/CD a partir de um segredo do repositório (ex: `${{ secrets.DB_PASSWORD }}`), evitando que qualquer credencial permaneça gravada no código fonte.
-
 ---
 
 ## 🧪 Como Executar os Testes
