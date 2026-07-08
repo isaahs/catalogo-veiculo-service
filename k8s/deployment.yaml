@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-catalog-service
+  labels:
+    app: vehicle-catalog-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vehicle-catalog-service
+  template:
+    metadata:
+      labels:
+        app: vehicle-catalog-service
+    spec:
+      containers:
+        - name: vehicle-catalog-service
+          image: vehicle-catalog-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres-db:5432/db_catalogo"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "admin"
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vehicle-catalog-secrets
+                  key: spring-datasource-password
+            - name: VENDAS_SERVICE_URL
+              value: "http://vehicle-sales-service:8081"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vehicle-catalog-secrets
+                  key: jwt-secret
+            - name: JWT_EXPIRATION_MS
+              value: "300000"
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10

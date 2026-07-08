@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: CatalogoService
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_catalogo
+    username: admin
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+vendas:
+  service:
+    url: http://localhost:8081 # URL local do VendasService
+
+jwt:
+  secret: "9a7262174c106437a346f906b3a0e67e3dfd36480b2713e33e9d80d2cf34d588" # 256-bit safe HMAC key
+  expiration-ms: 300000 # 5 minutes (300000ms) for M2M tokens
+
+resilience4j:
+  retry:
+    instances:
+      sincronizarVeiculo:
+        maxAttempts: 3
+        waitDuration: 2s # Tempo de espera fixo de 2s entre retentativas

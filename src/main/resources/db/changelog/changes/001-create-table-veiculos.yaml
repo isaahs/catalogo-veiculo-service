@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: fiap
+      changes:
+        - createTable:
+            tableName: tb_veiculos
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: placa
+                  type: VARCHAR(8)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: marca
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modelo
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ano
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cor
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: preco
+                  type: NUMERIC(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status_sincronizacao
+                  type: VARCHAR(50)
+                  defaultValue: PENDENTE
+                  constraints:
+                    nullable: false
