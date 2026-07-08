@@ -4,12 +4,23 @@ on:
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   validate:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate PR Source Branch (for main target)
+        if: github.base_ref == 'main'
+        run: |
+          echo "Checking source branch for PR targeting main..."
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "::error::PRs to main must only originate from the 'develop' branch. Received: ${{ github.head_ref }}"
+            exit 1
+          fi
+          echo "Validation successful: PR originates from 'develop'."
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
