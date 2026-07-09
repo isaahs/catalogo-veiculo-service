@@ -72,7 +72,7 @@ jobs:
             # Check if PR already exists
             PR_EXISTS=$(gh pr list --base "$TARGET_BRANCH" --head "${{ github.ref_name }}" --json number --jq '.[0].number')
             if [ -z "$PR_EXISTS" ]; then
-              gh pr create --title "Automated PR: ${{ github.ref_name }} -> $TARGET_BRANCH" \
+              gh pr create --title "PR: ${{ github.ref_name }} -> $TARGET_BRANCH" \
                            --body "PR criado automaticamente pelo pipeline de CI/CD após a validação e testes passarem com sucesso." \
                            --base "$TARGET_BRANCH" \
                            --head "${{ github.ref_name }}"
