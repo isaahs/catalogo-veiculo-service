@@ -19,7 +19,9 @@ Este é o **catalogo-service** (software principal), um microsserviço desenvolv
 
 ## 🏛️ Arquitetura e Decisões de Design
 
-O projeto foi estruturado seguindo os princípios da **Arquitetura Hexagonal (Ports & Adapters)**, garantindo que o domínio esteja isolado de detalhes tecnológicos (frameworks, bancos de dados, integrações HTTP):
+O projeto foi estruturado seguindo os princípios da **Arquitetura Hexagonal (Ports & Adapters)**, garantindo que o domínio esteja isolado de detalhes tecnológicos (frameworks, bancos de dados, integrações HTTP).
+
+Para visualizar os fluxos detalhados de dados, sincronização e processos de negócio do projeto, consulte o documento de [diagramas de fluxo](file:///home/isadmot/Github/CatalogoService/docs/diagramas_fluxo.md).
 
 ```
 └─ src/main/java/br/com/fiap/sout/catalogo
