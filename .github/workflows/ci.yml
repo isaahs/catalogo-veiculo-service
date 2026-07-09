@@ -1,10 +1,20 @@
 name: CI - Validation Pipeline
 
 on:
+  push:
+    branches:
+      - develop
+      - 'feature/**'
+      - 'feat/**'
+      - 'fix/**'
   pull_request:
     branches:
       - main
       - develop
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   validate:
@@ -12,7 +22,7 @@ jobs:
 
     steps:
       - name: Validate PR Source Branch (for main target)
-        if: github.base_ref == 'main'
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
         run: |
           echo "Checking source branch for PR targeting main..."
           if [ "${{ github.head_ref }}" != "develop" ]; then
@@ -44,3 +54,31 @@ jobs:
           ignore-unfixed: true
           format: 'table'
           severity: 'HIGH,CRITICAL'
+
+      - name: Create Pull Request
+        if: github.event_name == 'push' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_BRANCH=""
+          if [ "${{ github.ref_name }}" = "develop" ]; then
+            TARGET_BRANCH="main"
+          elif [[ "${{ github.ref_name }}" =~ ^(feature|feat|fix)/ ]]; then
+            TARGET_BRANCH="develop"
+          fi
+          
+          if [ -n "$TARGET_BRANCH" ]; then
+            echo "Target branch determined: $TARGET_BRANCH"
+            # Check if PR already exists
+            PR_EXISTS=$(gh pr list --base "$TARGET_BRANCH" --head "${{ github.ref_name }}" --json number --jq '.[0].number')
+            if [ -z "$PR_EXISTS" ]; then
+              gh pr create --title "Automated PR: ${{ github.ref_name }} -> $TARGET_BRANCH" \
+                           --body "PR criado automaticamente pelo pipeline de CI/CD após a validação e testes passarem com sucesso." \
+                           --base "$TARGET_BRANCH" \
+                           --head "${{ github.ref_name }}"
+            else
+              echo "Pull Request de ${{ github.ref_name }} para $TARGET_BRANCH já existe: #$PR_EXISTS"
+            fi
+          else
+            echo "Sem destino automático de PR para a branch ${{ github.ref_name }}"
+          fi

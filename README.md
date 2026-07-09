@@ -90,19 +90,21 @@ Para rodar todos os testes unitários e de integração da aplicação:
 
 ### 📊 Cobertura de Testes (JaCoCo)
 
-Para gerar o relatório de cobertura de testes com o **JaCoCo**, execute o seguinte comando:
+Atualmente, a cobertura de testes do projeto é a seguinte:
+*   **Cobertura da Lógica de Negócio (Casos de Uso e Modelos de Domínio)**: **100%**
+*   **Cobertura Geral do Projeto (Total)**: **43%**
+*   **Mínimo Exigido pelas Regras de Qualidade**: **80%** (focado na lógica de negócio, com infraestrutura, adaptadores e portas excluídos da checagem)
+
+Para gerar o relatório de cobertura de testes com o **JaCoCo** localmente, execute o seguinte comando:
 ```bash
 ./mvnw test jacoco:report
 ```
 
-Após a execução, o relatório em formato HTML contendo a porcentagem e o detalhamento da cobertura estará disponível em:
+Após a execução, o relatório em formato HTML detalhado estará disponível em:
 *   [target/site/jacoco/index.html](file:///home/isadmot/Github/CatalogoService/target/site/jacoco/index.html)
 
-Você pode abrir este arquivo diretamente no seu navegador para visualizar graficamente quais partes do domínio (`usecases` e `domain models`) estão cobertas.
+Você pode abrir este arquivo diretamente no seu navegador para visualizar graficamente as linhas cobertas do código.
 
-> [!NOTE]
-> De acordo com as regras de qualidade e CI/CD descritas no [AGENTS.md](file:///home/isadmot/Github/CatalogoService/AGENTS.md), a cobertura de testes deve ser de no mínimo **80%**. Os adaptadores de infraestrutura, portas e exceções de domínio estão excluídos da checagem de limite para focar a cobertura estritamente na lógica do domínio e nos casos de uso.
----
 
 ## 📖 Documentação da API (OpenAPI/Swagger)
 
