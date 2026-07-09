@@ -38,13 +38,18 @@ public class VendasVeiculoAdapterHttp implements SincronizarCatalogoPort, Verifi
 
     @Override
     public boolean verificarVeiculoVendido(UUID Id) {
-
-        String url = vendasServiceUrl + "/veiculos/" + Id + "/vendido";
-        Boolean isVendido = restTemplate.getForObject(url, Boolean.class);
-        if (isVendido != null) {
-            return isVendido;
+        try {
+            String url = vendasServiceUrl + "/veiculos/" + Id + "/vendido";
+            Boolean isVendido = restTemplate.getForObject(url, Boolean.class);
+            if (isVendido != null) {
+                return isVendido;
+            }
+            return false;
+        } catch (org.springframework.web.client.RestClientException e) {
+            log.error("Erro de rede ao verificar se veiculo {} esta vendido. Upstream vendas service url: {}", Id, vendasServiceUrl, e);
+            throw new br.com.fiap.sout.catalogo.domain.exceptions.ServicoVendasIndisponivelException(
+                    "Não foi possível verificar se o veículo está vendido porque o serviço de vendas está indisponível.", e);
         }
-        return false;
     }
 
     public void fallbackSincronizar(Veiculo veiculo, Throwable t) {
