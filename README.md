@@ -105,7 +105,6 @@ Após a execução, o relatório em formato HTML detalhado estará disponível e
 
 Você pode abrir este arquivo diretamente no seu navegador para visualizar graficamente as linhas cobertas do código.
 
-
 ## 📖 Documentação da API (OpenAPI/Swagger)
 
 Com a aplicação rodando, você pode acessar:
