@@ -165,6 +165,25 @@ class VeiculoAdapterTest {
     }
 
     @Test
+    void deveRetornarBadGatewayQuandoServicoVendasIndisponivel() throws Exception {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        VeiculoRequestDto request = new VeiculoRequestDto("Ford", "Ka", 2019, "Prata", new BigDecimal("42000.00"), "ABC1234");
+        Veiculo veiculo = new Veiculo(id, "Ford", "Ka", 2019, "Prata", new BigDecimal("42000.00"), "ABC1234");
+
+        when(mapper.toDomain(eq(id), any(VeiculoRequestDto.class))).thenReturn(veiculo);
+        when(atualizarPort.atualizarVeiculo(any(Veiculo.class))).thenThrow(new br.com.fiap.sout.catalogo.domain.exceptions.ServicoVendasIndisponivelException(
+                "Não foi possível verificar se o veículo está vendido porque o serviço de vendas está indisponível.", new RuntimeException("connection refused")));
+
+        // Act & Assert
+        mockMvc.perform(put("/veiculos/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.detail").value("Não foi possível verificar se o veículo está vendido porque o serviço de vendas está indisponível."));
+    }
+
+    @Test
     void deveBuscarVeiculoPorIdComSucesso() throws Exception {
         // Arrange
         UUID id = UUID.randomUUID();

@@ -39,6 +39,11 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(br.com.fiap.sout.catalogo.domain.exceptions.ServicoVendasIndisponivelException.class)
+    public ProblemDetail handleServicoVendasIndisponivel(br.com.fiap.sout.catalogo.domain.exceptions.ServicoVendasIndisponivelException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
         log.error("Erro inesperado", ex);

@@ -83,17 +83,25 @@ O projeto inclui arquivos de infraestrutura como código (IaC) e manifestos Kube
 
 ## 🧪 Como Executar os Testes
 
-Para rodar todos os testes unitários da aplicação:
+Para rodar todos os testes unitários e de integração da aplicação:
 ```bash
 ./mvnw test
 ```
 
-### Testes Locais com o GitHub Actions (Act)
-Como a pipeline de CI/CD está integrada com GitHub Actions, você pode rodar os workflows localmente usando o [Act](https://github.com/nektos/act):
+### 📊 Cobertura de Testes (JaCoCo)
+
+Para gerar o relatório de cobertura de testes com o **JaCoCo**, execute o seguinte comando:
 ```bash
-act -s GITHUB_TOKEN=seu_token_aqui
+./mvnw test jacoco:report
 ```
 
+Após a execução, o relatório em formato HTML contendo a porcentagem e o detalhamento da cobertura estará disponível em:
+*   [target/site/jacoco/index.html](file:///home/isadmot/Github/CatalogoService/target/site/jacoco/index.html)
+
+Você pode abrir este arquivo diretamente no seu navegador para visualizar graficamente quais partes do domínio (`usecases` e `domain models`) estão cobertas.
+
+> [!NOTE]
+> De acordo com as regras de qualidade e CI/CD descritas no [AGENTS.md](file:///home/isadmot/Github/CatalogoService/AGENTS.md), a cobertura de testes deve ser de no mínimo **80%**. Os adaptadores de infraestrutura, portas e exceções de domínio estão excluídos da checagem de limite para focar a cobertura estritamente na lógica do domínio e nos casos de uso.
 ---
 
 ## 📖 Documentação da API (OpenAPI/Swagger)
