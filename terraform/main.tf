@@ -14,6 +14,12 @@ variable "db_password" {
   sensitive   = true
 }
 
+variable "db_password_vendas" {
+  description = "Senha do banco de dados RDS de Vendas"
+  type        = string
+  sensitive   = true
+}
+
 provider "aws" {
   access_key                  = "mock_access_key"
   secret_key                  = "mock_secret_key"
@@ -102,6 +108,23 @@ resource "aws_db_instance" "catalog_db" {
   }
 }
 
+# --- RDS PostgreSQL Instance for Vendas ---
+resource "aws_db_instance" "sales_db" {
+  identifier          = "postgres-db-vendas"
+  allocated_storage   = 20
+  engine              = "postgres"
+  engine_version      = "16.1"
+  instance_class      = "db.t3.micro"
+  db_name             = "db_vendas"
+  username            = "admin"
+  password            = var.db_password_vendas
+  skip_final_snapshot = true
+
+  tags = {
+    Environment = "Local-Floci"
+  }
+}
+
 # --- Outputs ---
 output "eks_cluster_name" {
   description = "Nome do Cluster EKS"
@@ -116,4 +139,9 @@ output "eks_cluster_endpoint" {
 output "db_instance_endpoint" {
   description = "Endpoint da Instancia RDS Postgres"
   value       = aws_db_instance.catalog_db.endpoint
+}
+
+output "sales_db_instance_endpoint" {
+  description = "Endpoint da Instancia RDS Postgres de Vendas"
+  value       = aws_db_instance.sales_db.endpoint
 }
