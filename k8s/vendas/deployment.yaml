@@ -22,9 +22,9 @@ spec:
             - containerPort: 8081
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres-db-vendas:5432/db_vendas"
+              value: "jdbc:postgresql://172.23.0.1:5433/db_vendas"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "admin"
+              value: "postgres"
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:

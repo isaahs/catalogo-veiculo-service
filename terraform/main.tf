@@ -8,17 +8,7 @@ terraform {
   }
 }
 
-variable "db_password" {
-  description = "Senha do banco de dados RDS"
-  type        = string
-  sensitive   = true
-}
 
-variable "db_password_vendas" {
-  description = "Senha do banco de dados RDS de Vendas"
-  type        = string
-  sensitive   = true
-}
 
 provider "aws" {
   access_key                  = "mock_access_key"
@@ -91,39 +81,7 @@ resource "aws_eks_cluster" "catalog_eks" {
   }
 }
 
-# --- RDS PostgreSQL Instance ---
-resource "aws_db_instance" "catalog_db" {
-  identifier          = "postgres-db-catalogo"
-  allocated_storage   = 20
-  engine              = "postgres"
-  engine_version      = "16.1"
-  instance_class      = "db.t3.micro"
-  db_name             = "db_catalogo"
-  username            = "admin"
-  password            = var.db_password
-  skip_final_snapshot = true
 
-  tags = {
-    Environment = "Local-Floci"
-  }
-}
-
-# --- RDS PostgreSQL Instance for Vendas ---
-resource "aws_db_instance" "sales_db" {
-  identifier          = "postgres-db-vendas"
-  allocated_storage   = 20
-  engine              = "postgres"
-  engine_version      = "16.1"
-  instance_class      = "db.t3.micro"
-  db_name             = "db_vendas"
-  username            = "admin"
-  password            = var.db_password_vendas
-  skip_final_snapshot = true
-
-  tags = {
-    Environment = "Local-Floci"
-  }
-}
 
 # --- Outputs ---
 output "eks_cluster_name" {
@@ -136,12 +94,4 @@ output "eks_cluster_endpoint" {
   value       = aws_eks_cluster.catalog_eks.endpoint
 }
 
-output "db_instance_endpoint" {
-  description = "Endpoint da Instancia RDS Postgres"
-  value       = aws_db_instance.catalog_db.endpoint
-}
 
-output "sales_db_instance_endpoint" {
-  description = "Endpoint da Instancia RDS Postgres de Vendas"
-  value       = aws_db_instance.sales_db.endpoint
-}
