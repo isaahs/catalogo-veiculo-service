@@ -202,9 +202,6 @@
                         <configuration>
                             <excludes>
                                 <exclude>br/com/fiap/sout/catalogo/CatalogoServiceApplication.class</exclude>
-                                <exclude>br/com/fiap/sout/catalogo/infra/**</exclude>
-                                <exclude>br/com/fiap/sout/catalogo/adapter/**</exclude>
-                                <exclude>br/com/fiap/sout/catalogo/domain/exceptions/**</exclude>
                                 <exclude>br/com/fiap/sout/catalogo/application/ports/**</exclude>
                             </excludes>
                             <rules>
@@ -214,7 +211,7 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.80</minimum>
+                                            <minimum>0.85</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

@@ -244,4 +244,16 @@ class VeiculoAdapterTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    @Test
+    void deveRetornarInternalServerErrorQuandoOcorrerErroInesperado() throws Exception {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        when(buscarPort.buscarVeiculoPorId(id)).thenThrow(new RuntimeException("Erro genérico"));
+
+        // Act & Assert
+        mockMvc.perform(get("/veiculos/{id}", id))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.detail").value("Ocorreu um erro inesperado."));
+    }
 }
