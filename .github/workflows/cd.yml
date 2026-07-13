@@ -27,14 +27,19 @@ jobs:
         run: ./mvnw clean package -DskipTests
 
       - name: Build Docker Image
-        run: |
-          docker build -t vehicle-catalog-service:latest .
+        run: docker build -t vehicle-catalog-service:latest .
 
       - name: Start Floci (AWS Emulator)
         run: |
-          docker run -d --name floci -p 4566:4566 floci/floci:latest
-          echo "Aguardando o Floci iniciar..."
-          until curl -sf http://localhost:4566/_floci/health > /dev/null; do sleep 1; done
+          docker run -d --name floci \
+            -p 4566:4566 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            floci/floci:latest
+          echo "Aguardando Floci inicializar..."
+          until curl -sf http://localhost:4566/_floci/health > /dev/null; \
+            do sleep 2; done
+          echo "✅ Floci pronto"
+          sleep 10
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -43,13 +48,42 @@ jobs:
 
       - name: Terraform Init & Apply
         run: |
-          echo "Provisionando infraestrutura (RDS + EKS) via Terraform..."
           cd terraform
           terraform init
           terraform apply -auto-approve
         env:
-          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_db_password_vendas: ${{ secrets.DB_PASSWORD_VENDAS }}
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name eks-catalog-cluster
+          kubectl get nodes
+        env:
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+
+      - name: Import images into k3s cluster
+        run: |
+          docker save vehicle-catalog-service:latest -o /tmp/catalog.tar
+          K3S=$(docker ps --filter "name=floci-eks" --format "{{.Names}}" | head -1)
+          echo "Container k3s: $K3S"
+          docker cp /tmp/catalog.tar $K3S:/tmp/catalog.tar
+          docker exec $K3S sh -c "ctr --namespace k8s.io images import /tmp/catalog.tar"
+          docker exec $K3S sh -c "ctr --namespace k8s.io images ls | grep vehicle"
+
+      - name: Connect databases to k3s network
+        run: |
+          NETWORK=$(docker inspect floci-eks-eks-catalog-cluster \
+            --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' \
+            | tr ' ' '\n' | grep -v bridge | head -1)
+          echo "Rede k3s: $NETWORK"
+          docker network connect $NETWORK postgres-catalogo || true
+          docker network connect $NETWORK db-vendas || true
 
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v4
@@ -58,5 +92,11 @@ jobs:
 
       - name: Deploy to EKS
         run: |
-          echo "Aplicando manifestos Kubernetes..."
-          kubectl apply -f k8s/catalogo/ -f k8s/vendas/
+          kubectl apply -f k8s/catalogo/
+          kubectl apply -f k8s/vendas/
+          kubectl get pods
+        env:
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
