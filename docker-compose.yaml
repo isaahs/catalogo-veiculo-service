@@ -11,5 +11,20 @@ services:
     volumes:
       - pgdata-catalogo:/var/lib/postgresql/data
 
+  floci:
+    image: floci/floci:latest
+    container_name: floci
+    ports:
+      - "4566:4566"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+    environment:
+      FLOCI_SERVICES_EKS_DOCKER_NETWORK: vehicle-catalog-service_default
+
+networks:
+  default:
+    name: vehicle-catalog-service_default
+
 volumes:
   pgdata-catalogo:

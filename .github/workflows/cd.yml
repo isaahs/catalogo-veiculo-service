@@ -49,6 +49,7 @@ jobs:
           terraform apply -auto-approve
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_db_password_vendas: ${{ secrets.DB_PASSWORD_VENDAS }}
 
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v4
@@ -58,4 +59,4 @@ jobs:
       - name: Deploy to EKS
         run: |
           echo "Aplicando manifestos Kubernetes..."
-          kubectl apply -f k8s/secret.yaml -f k8s/deployment.yaml -f k8s/service.yaml
+          kubectl apply -f k8s/catalogo/ -f k8s/vendas/
