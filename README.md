@@ -19,7 +19,9 @@ Este é o **catalogo-service** (software principal), um microsserviço desenvolv
 
 ## 🏛️ Arquitetura e Decisões de Design
 
-O projeto foi estruturado seguindo os princípios da **Arquitetura Hexagonal (Ports & Adapters)**, garantindo que o domínio esteja isolado de detalhes tecnológicos (frameworks, bancos de dados, integrações HTTP):
+O projeto foi estruturado seguindo os princípios da **Arquitetura Hexagonal (Ports & Adapters)**, garantindo que o domínio esteja isolado de detalhes tecnológicos (frameworks, bancos de dados, integrações HTTP).
+
+Para visualizar os fluxos detalhados de dados, sincronização e processos de negócio do projeto, consulte o documento de [diagramas de fluxo](file:///home/isadmot/Github/CatalogoService/docs/diagramas_fluxo.md).
 
 ```
 └─ src/main/java/br/com/fiap/sout/catalogo
@@ -81,18 +83,27 @@ O projeto inclui arquivos de infraestrutura como código (IaC) e manifestos Kube
 
 ## 🧪 Como Executar os Testes
 
-Para rodar todos os testes unitários da aplicação:
+Para rodar todos os testes unitários e de integração da aplicação:
 ```bash
 ./mvnw test
 ```
 
-### Testes Locais com o GitHub Actions (Act)
-Como a pipeline de CI/CD está integrada com GitHub Actions, você pode rodar os workflows localmente usando o [Act](https://github.com/nektos/act):
+### 📊 Cobertura de Testes (JaCoCo)
+
+Atualmente, a cobertura de testes do projeto é a seguinte:
+*   **Cobertura da Lógica de Negócio (Casos de Uso e Modelos de Domínio)**: **100%**
+*   **Cobertura Geral do Projeto (Total)**: **43%**
+*   **Mínimo Exigido pelas Regras de Qualidade**: **80%** (focado na lógica de negócio, com infraestrutura, adaptadores e portas excluídos da checagem)
+
+Para gerar o relatório de cobertura de testes com o **JaCoCo** localmente, execute o seguinte comando:
 ```bash
-act -s GITHUB_TOKEN=seu_token_aqui
+./mvnw test jacoco:report
 ```
 
----
+Após a execução, o relatório em formato HTML detalhado estará disponível em:
+*   [target/site/jacoco/index.html](file:///home/isadmot/Github/CatalogoService/target/site/jacoco/index.html)
+
+Você pode abrir este arquivo diretamente no seu navegador para visualizar graficamente as linhas cobertas do código.
 
 ## 📖 Documentação da API (OpenAPI/Swagger)
 

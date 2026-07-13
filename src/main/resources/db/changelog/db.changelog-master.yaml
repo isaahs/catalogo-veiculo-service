@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/changes/001-create-table-veiculos.yaml
+      file: classpath:db/changelog/changes/001-create-table-veiculos.yaml
+  - include:
+      file: classpath:db/changelog/changes/002-seed-veiculos.yaml
