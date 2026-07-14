@@ -72,7 +72,7 @@ catalogo-veiculo-service/
 | kubectl | 1.29+ | `brew install kubectl` / [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
 | AWS CLI | 2.x | `brew install awscli` / [aws.amazon.com](https://aws.amazon.com/cli/) |
 
-> **Nota:** O AWS CLI é necessário mesmo rodando localmente — o Terraform e o kubectl usam ele para se comunicar com o Floci (emulador local da AWS, substituto do LocalStack).
+> **Nota:** O AWS CLI é necessário mesmo rodando localmente — o Terraform e o kubectl usam ele para se comunicar com o Floci (emulador local da AWS).
 
 > **Windows:** Recomenda-se rodar todos os comandos no **WSL2** com a integração do Docker Desktop habilitada em *Settings → Resources → WSL Integration*.
 
@@ -110,7 +110,7 @@ O Liquibase aplicará as migrations automaticamente. A aplicação ficará dispo
 
 ## Como rodar com Kubernetes + Floci (simulando AWS)
 
-Simula o ambiente de produção completo: cluster EKS (k3s real), os dois microsserviços como pods Kubernetes — tudo local, sem custo.
+Simula o ambiente de produção completo: cluster EKS (k3s real), os dois microsserviços como pods Kubernetes localmente.
 
 ### O que será criado
 
@@ -120,22 +120,24 @@ Docker Compose
   ├── db-vendas          → banco de vendas (porta 5433, sobe no repo de vendas)
   └── floci              → emulador AWS (porta 4566)
         └── Cluster EKS (k3s real)
-              ├── Pod: catalogo-veiculo-service (porta 8080)
-              └── Pod: vendas-veiculo-service  (porta 8081)
+              ├── Pod: vehicle-catalog-service (porta 8080)
+              └── Pod: vehicle-sales-service   (porta 8081)
 ```
 
-> **Importante:** Os bancos de dados ficam no Docker Compose (não no RDS), e os pods Kubernetes conectam diretamente a eles via IP da rede Docker. O RDS foi removido pois o Floci não finalizava a criação do recurso de forma confiável — os bancos Docker Compose atendem 100% o requisito de "banco de dados segregado" do enunciado.
+> **Importante:** 
+> 
+> Apesar dos repositórios se chamarem `catalogo-veiculo-service`/`vendas-veiculo-service`, os manifests em `k8s/` usam `vehicle-catalog-service`/`vehicle-sales-service` como nome de Deployment, Service e tag de imagem Docker. Use exatamente esses nomes nos comandos.
+>
+> Os bancos de dados ficam no Docker Compose, e os pods Kubernetes conectam diretamente a eles via IP da rede Docker.
 
 ### Passo 1 — Configure as variáveis de ambiente do AWS CLI
 
-Adicione ao `~/.zshrc` ou `~/.bashrc` para não precisar repetir a cada terminal:
-
+A cada terminal que abrir adicone as váriaveis de ambiente do AWS CLI para apontar para o Floci local:
 ```bash
-echo 'export AWS_ENDPOINT_URL=http://localhost:4566' >> ~/.zshrc
-echo 'export AWS_DEFAULT_REGION=us-east-1' >> ~/.zshrc
-echo 'export AWS_ACCESS_KEY_ID=test' >> ~/.zshrc
-echo 'export AWS_SECRET_ACCESS_KEY=test' >> ~/.zshrc
-source ~/.zshrc
+export AWS_ENDPOINT_URL=http://localhost:4566
+export AWS_DEFAULT_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
 ```
 
 ### Passo 2 — Suba o Docker Compose
@@ -201,11 +203,11 @@ docker network connect catalogo-veiculo-service_default db-vendas
 
 ```bash
 # Dentro de catalogo-veiculo-service
-docker build -t catalogo-veiculo-service:latest .
+docker build -t vehicle-catalog-service:latest .
 
 # Dentro de vendas-veiculo-service
 cd ../vendas-veiculo-service
-docker build -t vendas-veiculo-service:latest .
+docker build -t vehicle-sales-service:latest .
 cd ../catalogo-veiculo-service
 ```
 
@@ -215,8 +217,8 @@ O k3s não enxerga as imagens do Docker do host automaticamente:
 
 ```bash
 # Salva as imagens
-docker save catalogo-veiculo-service:latest -o /tmp/catalog.tar
-docker save vendas-veiculo-service:latest -o /tmp/sales.tar
+docker save vehicle-catalog-service:latest -o /tmp/catalog.tar
+docker save vehicle-sales-service:latest -o /tmp/sales.tar
 
 # Descobre o container k3s
 K3S_CONTAINER=$(docker ps --filter "name=floci-eks" --format "{{.Names}}" | head -1)
@@ -239,6 +241,8 @@ kubectl apply -f k8s/catalogo/
 kubectl apply -f k8s/vendas/
 ```
 
+> `k8s/vendas/deployment.yaml` sobe o `vendas-veiculo-service` com `SPRING_PROFILES_ACTIVE=dev`, o que habilita os endpoints de teste `POST /auth/token` e `POST /auth/hmac-signature` no Swagger dele (porta 8081) — úteis para gerar token JWT e assinatura HMAC sem precisar calcular na mão. Veja o README do `vendas-veiculo-service` para detalhes.
+
 ### Passo 9 — Acompanhe os pods
 
 ```bash
@@ -255,10 +259,10 @@ Como os Services são `ClusterIP`, use port-forward:
 
 ```bash
 # Terminal 1
-kubectl port-forward service/catalogo-veiculo-service 8080:8080
+kubectl port-forward service/vehicle-catalog-service 8080:8080
 
 # Terminal 2
-kubectl port-forward service/vendas-veiculo-service 8081:8081
+kubectl port-forward service/vehicle-sales-service 8081:8081
 ```
 
 - **Catálogo (Swagger):** http://localhost:8080/swagger-ui/index.html
@@ -393,7 +397,9 @@ sequenceDiagram
     participant Sales as vehicle-sales-service
     participant DB_Sales as DB Vendas (Sales)
 
-    Buyer->>Sales: POST /vendas (Efetuar Compra)
+    Buyer->>Sales: POST /vendas {cpfComprador, veiculoId} (Efetuar Compra)
+    Note over Sales, DB_Sales: Resolve veiculoId -> id interno do item de catálogo
+    Sales->>DB_Sales: SELECT id FROM item_catalogo WHERE veiculo_id = ?
     Note over Sales, DB_Sales: Executa Query Condicional de Atualização
     Sales->>DB_Sales: UPDATE item_catalogo SET status = 'RESERVADO' WHERE id = ? AND status = 'DISPONIVEL'
     
@@ -456,21 +462,10 @@ flowchart TD
 
 ## Testando o Webhook de Pagamentos
 
-O endpoint `/pagamentos/webhook` do `vendas-veiculo-service` valida a autenticidade da requisição através de uma assinatura HMAC-SHA256, enviada no header `X-Signature`.
+O endpoint `/pagamentos/webhook` do `vendas-veiculo-service` valida a autenticidade da requisição através de uma assinatura HMAC-SHA256, enviada no header `X-Signature`, calculada sobre a forma canônica do corpo (reformatar espaços/quebras de linha não invalida a assinatura).
 
-> ⚠️ **Apenas para ambiente local de testes.** Este valor é o mesmo definido em [k8s/vendas/secret.yaml](file:///home/isadmot/Github/CatalogoService/k8s/vendas/secret.yaml) (campo `hmac-secret`, em Base64) e está documentado aqui somente para facilitar a validação. Não reutilize este segredo em ambientes reais.
+> ⚠️ **Apenas para ambiente local de testes.** Este valor é o mesmo definido em [k8s/vendas/secret.yaml](./k8s/vendas/secret.yaml) (campo `hmac-secret`, em Base64) e está documentado aqui somente para facilitar a validação. Não reutilize este segredo em ambientes reais.
 
-- **Chave HMAC de teste:** `super-secret-hmac-signature-key-for-webhook-validation-2026`
-
-Para calcular a assinatura e chamar o webhook localmente:
-```bash
-BODY='{"codigoPagamento":"SEU_CODIGO","status":"APROVADO"}'
-SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "super-secret-hmac-signature-key-for-webhook-validation-2026" | awk '{print $2}')
-curl -X POST http://localhost:8081/pagamentos/webhook \
-  -H "Content-Type: application/json" \
-  -H "X-Signature: $SIG" \
-  -d "$BODY"
-```
 ---
 ## Variáveis de ambiente
 
