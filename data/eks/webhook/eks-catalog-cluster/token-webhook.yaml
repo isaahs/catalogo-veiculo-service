@@ -3,7 +3,7 @@ kind: Config
 clusters:
 - name: floci-token-webhook
   cluster:
-    server: http://172.23.0.3:4566/_floci/eks/token-webhook
+    server: http://172.23.0.4:4566/_floci/eks/token-webhook
 users:
 - name: floci-token-webhook
 contexts:
